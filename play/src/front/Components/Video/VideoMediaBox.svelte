@@ -91,7 +91,7 @@
     let doorbellSentTimer: ReturnType<typeof setTimeout> | null = null;
 
     async function ringDoorbell(): Promise<void> {
-        if (!extendedSpaceUser || isLocalUser || doorbellSending) {
+        if (!extendedSpaceUser || isLocalUser || doorbellSending || doorbellSent) {
             return;
         }
 
@@ -103,7 +103,7 @@
             doorbellSentTimer = setTimeout(() => {
                 doorbellSent = false;
                 doorbellSentTimer = null;
-            }, 2_000);
+            }, 5_000);
         } catch (error) {
             console.error("Failed to ring doorbell", error);
         } finally {
@@ -282,7 +282,7 @@
                     <button
                         class={"absolute bottom-2 right-2 z-[252] flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-white shadow-lg transition-colors " +
                             (doorbellSent ? "bg-green-600" : "bg-contrast/80 hover:bg-white/20")}
-                        disabled={doorbellSending}
+                        disabled={doorbellSending || doorbellSent}
                         aria-label={doorbellSent ? "呼び鈴を送信しました" : `${name ?? "ユーザー"}さんを呼び出す`}
                         title={doorbellSent ? "送信しました" : "呼び鈴"}
                         on:click|preventDefault|stopPropagation={ringDoorbell}
