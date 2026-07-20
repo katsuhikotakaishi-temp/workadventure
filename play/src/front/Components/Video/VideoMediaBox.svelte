@@ -21,7 +21,7 @@
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
-    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff } from "@wa-icons";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconBell, IconMicrophoneOff } from "@wa-icons";
 
     export let fullScreen = false;
     export let videoBox: VideoBox; // If true, and if there is no video, the height of the video box will be 11rem
@@ -84,6 +84,31 @@
 
     function exitFullScreen() {
         highlightedEmbedScreen.removeHighlight();
+    }
+
+    let doorbellSending = false;
+    let doorbellSent = false;
+    let doorbellSentTimer: ReturnType<typeof setTimeout> | null = null;
+
+    async function ringDoorbell(): Promise<void> {
+        if (!extendedSpaceUser || isLocalUser || doorbellSending) {
+            return;
+        }
+
+        doorbellSending = true;
+        try {
+            await gameScene.ringDoorbell(extendedSpaceUser.uuid);
+            doorbellSent = true;
+            if (doorbellSentTimer) clearTimeout(doorbellSentTimer);
+            doorbellSentTimer = setTimeout(() => {
+                doorbellSent = false;
+                doorbellSentTimer = null;
+            }, 2_000);
+        } catch (error) {
+            console.error("Failed to ring doorbell", error);
+        } finally {
+            doorbellSending = false;
+        }
     }
 
     let userMenuButton: HTMLDivElement;
@@ -161,6 +186,7 @@
     onDestroy(() => {
         closeFloatingUi?.();
         if (connectingTimer) clearTimeout(connectingTimer);
+        if (doorbellSentTimer) clearTimeout(doorbellSentTimer);
     });
 </script>
 
@@ -251,6 +277,24 @@
                         </div>
                     {/if}
                 </UserName>
+
+                {#if effectiveStatus === "connected" && !isLocalUser && extendedSpaceUser}
+                    <button
+                        class="absolute bottom-2 right-2 z-[252] flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-white shadow-lg transition-colors"
+                        class:bg-green-600={doorbellSent}
+                        class:bg-contrast/80={!doorbellSent}
+                        class:hover:bg-white/20={!doorbellSent}
+                        disabled={doorbellSending}
+                        aria-label={doorbellSent ? "呼び鈴を送信しました" : `${name ?? "ユーザー"}さんを呼び出す`}
+                        title={doorbellSent ? "送信しました" : "呼び鈴"}
+                        on:click|preventDefault|stopPropagation={ringDoorbell}
+                    >
+                        <IconBell class="h-5 w-5" />
+                        <span class="hidden @[17.5rem]/videomediabox:inline">
+                            {doorbellSent ? "送信済み" : "呼び鈴"}
+                        </span>
+                    </button>
+                {/if}
 
                 {#if effectiveStatus === "connected" && $hasAudioStore}
                     <div class="z-[251] absolute p-2 right-1" class:top-1={videoEnabled} class:top-0={!videoEnabled}>
