@@ -1508,6 +1508,23 @@ export class GameScene extends DirtyScene {
         return this.remotePlayersRepository;
     }
 
+    public async ringDoorbell(userUuid: string): Promise<void> {
+        const remotePlayer = [...this.remotePlayersRepository.getPlayers().values()].find(
+            (player) => player.userUuid === userUuid
+        );
+        if (!remotePlayer || !this.connection) {
+            throw new Error("The selected user is no longer nearby.");
+        }
+
+        await this.connection.emitScriptableEvent(
+            "workadventure:doorbell",
+            {
+                senderName: localUserStore.getName() ?? "ユーザー",
+            },
+            [remotePlayer.userId]
+        );
+    }
+
     public getMapEditorModeManager(): MapEditorModeManager {
         return this.mapEditorModeManager;
     }
