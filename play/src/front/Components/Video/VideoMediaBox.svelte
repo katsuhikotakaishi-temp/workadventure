@@ -280,10 +280,8 @@
 
                 {#if effectiveStatus === "connected" && !isLocalUser && extendedSpaceUser}
                     <button
-                        class="absolute bottom-2 right-2 z-[252] flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-white shadow-lg transition-colors"
-                        class:bg-green-600={doorbellSent}
-                        class:bg-contrast/80={!doorbellSent}
-                        class:hover:bg-white/20={!doorbellSent}
+                        class={"absolute bottom-2 right-2 z-[252] flex h-9 items-center gap-1 rounded-lg px-2 text-sm text-white shadow-lg transition-colors " +
+                            (doorbellSent ? "bg-green-600" : "bg-contrast/80 hover:bg-white/20")}
                         disabled={doorbellSending}
                         aria-label={doorbellSent ? "呼び鈴を送信しました" : `${name ?? "ユーザー"}さんを呼び出す`}
                         title={doorbellSent ? "送信しました" : "呼び鈴"}
